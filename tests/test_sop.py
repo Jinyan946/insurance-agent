@@ -7,10 +7,10 @@ import pytest
 os.environ["DEMO_TODAY"] = "2026-03-05"
 os.environ["OUTBOX_PATH"] = "/tmp/sop_test_outbox.jsonl"
 
-from app.agent import Agent  # noqa: E402
-from app.llm import LLM  # noqa: E402
-from app.sop import Session  # noqa: E402
-from app import tools  # noqa: E402
+from app.agent import Agent  
+from app.llm import LLM  
+from app.sop import Session 
+from app import tools 
 
 DEMO = ("I'm the policyholder. My name is Margaret Chen, policy POL-9921. I'm calling about my denied "
         "healthcare claim from January. DOB is 1985-03-15, SSN last four is 4472.")
@@ -26,18 +26,18 @@ def kinds(a):
     return [e["kind"] for e in a.s.events]
 
 
-# ------------------------------------------------------------- demo test case
+#demo test case
 def test_demo_case_verifies_remembers_and_resolves():
     a = agent()
     r = a.handle(DEMO)
     st = r["state"]
     assert st["verified"] and st["authorized"]
-    assert st["selected_case"] == "CL-2048"               # denied + healthcare + January -> unique
+    assert st["selected_case"] == "CL-2048"           
     assert st["phase"] == "PROCESS_CASE"
-    assert "remembered_for_later" in kinds(a)             # hint captured while still in VERIFY_ID
+    assert "remembered_for_later" in kinds(a)            
     ev = next(e for e in a.s.events if e["kind"] == "case_resolved")
     assert ev["from_memory"] is True
-    assert "pathology report" in r["reply"]                # grounded denial reason
+    assert "pathology report" in r["reply"]            
 
 
 def test_no_disclosure_before_verification():
@@ -58,7 +58,7 @@ def test_guard_blocks_leaky_llm_reply():
     assert blocked and out == "Please verify first."
 
 
-# ------------------------------------------------------------- verification behaviour
+#verification behaviour
 def test_angry_caller_gets_empathy_and_no_bypass():
     a = agent()
     a.handle("My name is Margaret Chen.")
@@ -84,7 +84,7 @@ def test_mismatch_does_not_reveal_field_and_locks_after_3():
     for _ in range(2):
         r = a.handle("My name is Ava Lopez, dob 1990-08-21, ssn last four 1111")
         assert r["state"]["phase"] == "VERIFY_ID"
-        assert "SSN" not in r["reply"].split("following")[0]   # doesn't say which field was wrong
+        assert "SSN" not in r["reply"].split("following")[0] 
     r = a.handle("My name is Ava Lopez, dob 1990-08-21, ssn last four 1111")
     assert r["state"]["phase"] == "HUMAN_HANDOFF"
 
@@ -110,7 +110,7 @@ def test_persistent_pushback_offers_human():
     assert r["state"]["phase"] == "HUMAN_HANDOFF"
 
 
-# ------------------------------------------------------------- representative + consent
+#representative + consent
 def test_representative_with_consent():
     a = agent("default")
     a.handle("Hi, I'm calling on behalf of my mother Margaret Chen. My name is David Chen, I'm her son.")
@@ -139,11 +139,11 @@ def test_unknown_representative_blocked():
     assert not r["state"]["authorized"] and r["state"]["awaiting"] == "handoff_offer"
 
 
-# ------------------------------------------------------------- resolve / process
+#resolve / process
 def test_ambiguous_claim_asks_to_choose():
     a = agent()
     r = a.handle("My name is Margaret Chen, DOB 1985-03-15, SSN last four 4472. It's about my healthcare claim from January.")
-    assert r["state"]["phase"] == "RESOLVE_INTENT"            # CL-2048 (2026) vs CL-2011 (2025)
+    assert r["state"]["phase"] == "RESOLVE_INTENT"        
     assert "CL-2048" in r["reply"] and "CL-2011" in r["reply"]
     r = a.handle("the 2026 claim")
     assert r["state"]["selected_case"] == "CL-2048"
@@ -166,7 +166,7 @@ def test_switch_claim_mid_conversation():
     assert r["state"]["selected_case"] == "CL-2102"
 
 
-# ------------------------------------------------------------- scope guard
+#scope guard
 def test_off_topic_declined_then_human_offer():
     a = agent()
     r = a.handle("What is RL?")
@@ -184,7 +184,7 @@ def test_explicit_human_request():
     assert r["state"]["phase"] == "HUMAN_HANDOFF"
 
 
-# ------------------------------------------------------------- post process
+#post process
 def test_email_send():
     a = agent()
     a.handle(DEMO)
