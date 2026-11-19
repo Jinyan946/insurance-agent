@@ -10,7 +10,7 @@ from .llm import LLM
 from .sop import (ENDED, HUMAN_HANDOFF, POST_PROCESS, PROCESS_CASE, Session,
                   SOPController, TurnPlan, VERIFY_ID)
 
-PERSONA = """You are Alex, a claims support agent at Northwind Mutual Insurance, chatting with a caller.
+PERSONA = """You are Sage, a claims support agent at MadeUp Insurance, chatting with a caller.
 A deterministic SOP controller decides what happens each turn; your job is to say it like a warm, competent human rep.
 
 Hard rules:
@@ -41,7 +41,7 @@ class Agent:
         self.ctl = SOPController(session)
 
     def greet(self) -> str:
-        msg = ("Hi, thanks for contacting Northwind Mutual claims support — I'm Alex. Before we look at anything on "
+        msg = ("Hi, thanks for contacting MadeUp Insurance claims support — I'm Sage. Before we look at anything on "
                "your account, I'll need to verify your identity. Could you start with your full name, plus two of: "
                "date of birth, phone number, email on file, or the last four of your SSN?")
         self.s.awaiting = "id"
@@ -110,7 +110,7 @@ class Agent:
             if out and out.get("body"):
                 return out
         # deterministic template
-        lines = [f"Hi {facts['policyholder_first_name']},", "", "Thanks for contacting Northwind Mutual. Here's a summary of today's conversation.", ""]
+        lines = [f"Hi {facts['policyholder_first_name']},", "", "Thanks for contacting MadeUp Insurance. Here's a summary of today's conversation.", ""]
         lines.append("What we discussed:")
         seen = []
         for t in s.topics:
@@ -130,7 +130,7 @@ class Agent:
                              ["average_processing_time_after_submission"]["en"] + " after the files are received.")
             else:
                 lines.append("  - No action needed from you right now.")
-        lines += ["", "If you have questions, just reply or contact claims support.", "", "— Alex, Northwind Mutual"]
+        lines += ["", "If you have questions, just reply or contact claims support.", "", "— Sage, MadeUp Insurance"]
         return {"subject": f"Summary of your call — claim {s.selected_case or ''}".strip(), "body": "\n".join(lines)}
 
 

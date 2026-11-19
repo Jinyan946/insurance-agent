@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Northwind Mutual · Claims SOP Agent</title>
+<title>MadeUp Insurance · Claims SOP Agent</title>
 <style>
   :root {
     --bg: #f5f3ee; --panel: #ffffff; --ink: #1d2433; --muted: #6b7280; --line: #e4e0d6;
@@ -67,7 +67,7 @@
 </head>
 <body>
 <header>
-  <h1>Northwind Mutual · Claims Support</h1>
+  <h1>MadeUp Insurance · Claims Support</h1>
   <span class="tag" id="providerTag"></span>
   <span class="spacer"></span>
   <button id="settingsBtn">Settings</button>
@@ -190,7 +190,7 @@ async function start() {
 async function send(text) {
   if (!text.trim() || !sid) return;
   addMsg("user", text);
-  const t = document.createElement("div"); t.className = "typing"; t.textContent = "Alex is typing…"; $("log").appendChild(t);
+  const t = document.createElement("div"); t.className = "typing"; t.textContent = "Sage is typing…"; $("log").appendChild(t);
   try {
     const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sid, message: text }) });
     const r = await res.json();
