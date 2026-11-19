@@ -20,8 +20,8 @@ VERIFY_ID, RESOLVE_INTENT, PROCESS_CASE, POST_PROCESS = "VERIFY_ID", "RESOLVE_IN
 ENDED, HUMAN_HANDOFF = "ENDED", "HUMAN_HANDOFF"
 
 MAX_VERIFY_FAILURES = 3
-OFF_TOPIC_LIMIT = 3          # 3rd off-topic message -> suggest a human rep
-PUSHBACK_LIMIT = 3           # turns of refusal/arguing at a gate before offering a human
+OFF_TOPIC_LIMIT = 3         
+PUSHBACK_LIMIT = 3         
 FIELD_LABELS = {"name": "full name", "dob": "date of birth", "phone": "phone number on file",
                 "email": "email on file", "id_last4": "last four digits of your SSN or national ID"}
 NEGATIVE = {"frustrated", "angry", "anxious", "confused"}
@@ -46,7 +46,7 @@ class Session:
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:10])
     phase: str = VERIFY_ID
     consent_scenario: str = "default"
-    # identity
+
     id_slots: dict = field(default_factory=dict)
     policy_number: str | None = None
     caller_role: str = "self"
@@ -54,18 +54,18 @@ class Session:
     rep_relationship: str | None = None
     party_id: str | None = None
     verified: bool = False
-    authorized: bool = False          # verified AND (self OR rep with consent)
+    authorized: bool = False          
     verify_failures: int = 0
     refused: set = field(default_factory=set)
     consent: tools.ConsentRequest | None = None
     consent_status: str | None = None
-    # cross-phase memory
+
     intent: str | None = None
     case_hints: dict = field(default_factory=dict)
     memory_log: list = field(default_factory=list)
     selected_case: str | None = None
     candidates: list = field(default_factory=list)
-    # conversation control
+
     awaiting: str | None = None
     off_topic_count: int = 0
     pushback: int = 0
@@ -98,13 +98,11 @@ class Session:
         }
 
 
-# =============================================================== controller
 
 class SOPController:
     def __init__(self, s: Session):
         self.s = s
 
-    # ---------------------------------------------------------- memory
     def remember(self, sig: dict):
         s = self.s
         if not s.verified:
@@ -141,7 +139,6 @@ class SOPController:
             s.log("remembered_for_later", **note)
         return new_hints
 
-    # ---------------------------------------------------------- main entry
     def step(self, sig: dict, utterance: str) -> TurnPlan:
         s = self.s
         plan = TurnPlan(phase=s.phase)
@@ -153,7 +150,6 @@ class SOPController:
         prev_awaiting, s.awaiting = s.awaiting, None
         new_hints = self.remember(sig)
 
-        # emotion bookkeeping
         emo = sig.get("emotion", "neutral")
         s.negative_streak = s.negative_streak + 1 if emo in NEGATIVE else 0
         if emo in NEGATIVE:
@@ -161,11 +157,10 @@ class SOPController:
             plan.say(self._empathy_instruction(emo), self._empathy_fallback(emo))
             plan.facts["caller_emotion"] = emo
 
-        # global: explicit human request, or accepting a pending handoff offer
         if sig.get("wants_human") or (prev_awaiting == "handoff_offer" and sig.get("accepts_offer")):
             return self._handoff(plan, "caller requested a human representative")
 
-        # global: scope guard
+
         if sig.get("off_topic"):
             s.off_topic_count += 1
             s.log("off_topic", count=s.off_topic_count)
@@ -190,12 +185,12 @@ class SOPController:
                    PROCESS_CASE: self._process, POST_PROCESS: self._post}[s.phase]
         return handler(plan, sig, utterance, prev_awaiting, new_hints)
 
-    # ---------------------------------------------------------- VERIFY_ID (strict)
+
     def _verify(self, plan, sig, utterance, prev_awaiting, new_hints):
         s = self.s
         plan.phase = VERIFY_ID
 
-        # consent sub-step for representatives
+
         if s.verified and s.caller_role == "representative" and not s.authorized:
             return self._consent_step(plan)
 
@@ -242,7 +237,6 @@ class SOPController:
             s.awaiting = "id"
             return plan
 
-        # insufficient
         gave_new = any(sig.get(f) for f in tools.ID_FIELDS)
         stalled = not gave_new and (sig.get("refuses_fields") or sig.get("emotion") in NEGATIVE
                                     or sig.get("intent") or sig.get("question"))
@@ -321,7 +315,7 @@ class SOPController:
                      "I'm still waiting on the approval. Let me know once it's been accepted on the phone.")
             s.awaiting = "consent"
             return plan
-        # timeout / denied
+        
         plan.say("The authorization request expired without approval. Explain that claim details can't be shared "
                  "without the policyholder's consent. Offer: have the policyholder call directly, or transfer to a "
                  "human representative. Ask which they prefer.",
@@ -331,7 +325,7 @@ class SOPController:
         s.awaiting = "handoff_offer"
         return plan
 
-    # ---------------------------------------------------------- RESOLVE_INTENT (flexible)
+
     def _resolve(self, plan, sig, utterance, prev_awaiting, new_hints, chained=False):
         s = self.s
         plan.phase = RESOLVE_INTENT
@@ -392,13 +386,13 @@ class SOPController:
         s.awaiting = "case_choice"
         return plan
 
-    # ---------------------------------------------------------- PROCESS_CASE (flexible, grounded)
+
     def _process(self, plan, sig, utterance, prev_awaiting, new_hints, opening=False):
         s = self.s
         plan.phase = PROCESS_CASE
         plan.authorized = True
 
-        # switching to a different claim mid-case?
+  
         current = next(c for c in store.claims() if c["case_id"] == s.selected_case)
         if not opening and new_hints and current not in tools.find_claims(s.party_id, new_hints)["candidates"]:
             r = tools.find_claims(s.party_id, new_hints)["candidates"]
@@ -440,7 +434,7 @@ class SOPController:
         s.awaiting = "anything_else"
         return plan
 
-    # ---------------------------------------------------------- POST_PROCESS (semi-strict)
+
     def _post(self, plan, sig, utterance, prev_awaiting, new_hints, entering=False):
         s = self.s
         plan.phase = POST_PROCESS
@@ -453,7 +447,7 @@ class SOPController:
             if sig.get("accepts_offer") is True:
                 s.email = {"decision": "send", "to_masked": masked}
                 s.log("email_decision", decision="send")
-                return plan  # server generates + sends summary, then finishes the plan (needs the LLM)
+                return plan  
             if sig.get("accepts_offer") is False:
                 s.email = {"decision": "skip"}
                 s.log("email_decision", decision="skip")
@@ -485,7 +479,7 @@ class SOPController:
         s.goto(ENDED, "email sent")
         return plan
 
-    # ---------------------------------------------------------- handoff & helpers
+
     def _handoff(self, plan: TurnPlan, reason: str, security: bool = False) -> TurnPlan:
         s = self.s
         s.handoff = {"reason": reason, "verified": s.verified, "party_id": s.party_id if s.authorized else None,

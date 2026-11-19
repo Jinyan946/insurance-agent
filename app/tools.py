@@ -14,7 +14,6 @@ from . import store
 ID_FIELDS = ("name", "dob", "phone", "email", "id_last4")
 MIN_ID_MATCHES = 3
 
-# ---------------------------------------------------------------- normalizers
 
 _MONTHS = {m: i for i, m in enumerate(
     ["january", "february", "march", "april", "may", "june", "july", "august",
@@ -100,7 +99,6 @@ def _field_matches(p: dict, field: str, value: str) -> bool:
     return value in _record_values(p, field)
 
 
-# ---------------------------------------------------------------- identity
 
 def verify_identity(provided: dict) -> dict:
     """provided: already-normalized values for any of ID_FIELDS (+ optional policy_number).
@@ -112,7 +110,7 @@ def verify_identity(provided: dict) -> dict:
     pol = (provided.get("policy_number") or "").upper()
     if pol:
         located = [p for p in candidates if p["policy_number"] == pol]
-        candidates = located or candidates  # policy # is a locator, not a factor
+        candidates = located or candidates 
 
     best = None
     for p in candidates:
@@ -145,7 +143,6 @@ def check_representative(party_id: str, rep_name: str | None, relationship: str 
     return {"authorized": False}
 
 
-# ---------------------------------------------------------------- consent
 
 class ConsentRequest:
     """Simulates an out-of-band consent prompt sent to the policyholder (SMS/app push).
@@ -169,7 +166,6 @@ class ConsentRequest:
         return {"scenario": self.scenario, "checks": self.i, "sequence": self.seq}
 
 
-# ---------------------------------------------------------------- claims
 
 STATUS_SYNONYMS = {
     "denied": "denied", "rejected": "denied", "declined": "denied",
@@ -270,7 +266,6 @@ def claim_context(c: dict, utterance: str = "") -> dict:
     return ctx
 
 
-# ---------------------------------------------------------------- email / handoff
 
 OUTBOX = Path(os.getenv("OUTBOX_PATH", "/tmp/sop_agent_outbox.jsonl"))
 

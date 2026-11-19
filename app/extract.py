@@ -53,7 +53,6 @@ off_topic is only for requests unrelated to insurance/claims/this call; complain
 questions ('why do you need my SSN?') are NOT off topic."""
 
 
-# ------------------------------------------------------------------ heuristics (always on)
 
 _RX = {
     "email": re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"),
@@ -122,7 +121,6 @@ def heuristic(text: str, awaiting: str | None) -> dict:
         elif awaiting == "id" and (m := re.match(r"([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,2})(?:\.?$|,)", t)):
             out["name"] = m.group(1)
 
-    # claim hints (ignore the DOB span). Status/date words only count when talking about a claim.
     sl = scrub.lower()
     claimy = bool(re.search(r"claim|case", sl))
     for ct, words in {"healthcare": ("healthcare", "health care", "health claim", "medical"),
@@ -190,7 +188,6 @@ def heuristic(text: str, awaiting: str | None) -> dict:
     return out
 
 
-# ------------------------------------------------------------------ merge + validate
 
 def _clean(sig: dict) -> dict:
     out = dict(sig)
@@ -227,7 +224,6 @@ def extract(llm: LLM, text: str, phase: str, awaiting: str | None, last_agent: s
                 merged[k] = v
             elif k in ("off_topic", "wants_human", "conversation_done", "cannot_get_documents"):
                 merged[k] = bool(v) or False
-        # regex-validated PII wins when the model's value doesn't normalize
         cleaned = _clean(merged)
         for f in tools.ID_FIELDS:
             if not cleaned.get(f) and base.get(f):

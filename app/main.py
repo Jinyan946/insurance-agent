@@ -21,8 +21,8 @@ SESSIONS: dict[str, Agent] = {}
 
 
 class NewSession(BaseModel):
-    provider: str | None = None      # anthropic | openai | mock (default: auto from env)
-    api_key: str | None = None       # optional; overrides env for this session only, never stored on disk
+    provider: str | None = None     
+    api_key: str | None = None      
     model: str | None = None
     consent_scenario: str = "default"
 

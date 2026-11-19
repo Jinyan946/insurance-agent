@@ -73,7 +73,6 @@ class Agent:
                 "llm_error": self.llm.last_error,
                 "plan": {"phase": plan.phase, "instructions": plan.instructions}}
 
-    # ---------------------------------------------------------- rendering
     def _render(self, plan: TurnPlan) -> str:
         fallback = " ".join(plan.fallback)
         if self.llm.is_mock:
@@ -109,7 +108,7 @@ class Agent:
                  "required": ["subject", "body"]}, name="email_summary")
             if out and out.get("body"):
                 return out
-        # deterministic template
+  
         lines = [f"Hi {facts['policyholder_first_name']},", "", "Thanks for contacting MadeUp Insurance. Here's a summary of today's conversation.", ""]
         lines.append("What we discussed:")
         seen = []
@@ -134,7 +133,7 @@ class Agent:
         return {"subject": f"Summary of your call — claim {s.selected_case or ''}".strip(), "body": "\n".join(lines)}
 
 
-# ------------------------------------------------------------------ output guard
+
 
 def guard(reply: str, plan: TurnPlan, s: Session) -> tuple[str, str | None]:
     """Defense in depth: even though unverified turns never receive claim data, block any reply that

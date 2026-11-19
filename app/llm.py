@@ -78,12 +78,11 @@ class LLM:
                      {"model": self.model, **body})
 
     def _openai(self, body: dict) -> dict:
-        if "gpt-oss" in (self.model or ""):  # reasoning model: keep thinking short, leave room for the answer
+        if "gpt-oss" in (self.model or ""):  
             body = {**body, "reasoning_effort": "low", "max_tokens": max(body.get("max_tokens", 0), 2000)}
         return _post(f"{self.base_url}/chat/completions",
                      {"authorization": f"Bearer {self._key}"}, {"model": self.model, **body})
 
-    # ---------------------------------------------------------- structured output
     def structured(self, system: str, user: str, schema: dict, name: str = "record") -> dict | None:
         if self.is_mock:
             return None
@@ -102,11 +101,10 @@ class LLM:
                                                             "parameters": schema}}],
                 "tool_choice": {"type": "function", "function": {"name": name}}})
             return json.loads(r["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"])
-        except Exception as e:  # never let the model take the SOP down
+        except Exception as e:
             self._fail("structured call", e)
             return None
 
-    # ---------------------------------------------------------- free text
     def chat(self, system: str, messages: list[dict], max_tokens: int = 500) -> str | None:
         if self.is_mock:
             return None
