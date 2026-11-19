@@ -2,10 +2,13 @@
 
 This is my take on the SOP agent project: a chatbot for insurance claims support that has to follow a fixed
 workflow (verify the caller → figure out what they need → handle the claim → wrap up), but still talk like
-a normal person instead of a form.
+a normal person instead of a form. The agent is called **Sage** and works for a made-up company,
+**MadeUp Insurance**.
 
 **Live demo:** https://insurance-agent-fyt5.onrender.com/
-(It's on Render's free tier, so if nobody has used it for a while, the first load can take about a minute to wake up.)
+(It's on Render's free tier, so the first load can take about a minute to wake up.)
+
+**GitHub:** https://github.com/Jinyan946/insurance-agent
 
 ---
 
@@ -15,6 +18,8 @@ a normal person instead of a form.
 Click the link above. Nothing to set up.
 
 ### Option 2: run it on your own computer
+
+If you got this as a zip, just unzip it and `cd insurance-agent` (skip the `git clone` line).
 
 ```bash
 git clone https://github.com/Jinyan946/insurance-agent.git
